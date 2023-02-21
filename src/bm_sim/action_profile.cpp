@@ -412,12 +412,16 @@ ActionProfile::remove_member_from_group(mbr_hdl_t mbr, grp_hdl_t grp) {
       rc = MatchErrorCode::INVALID_GRP_HANDLE;
     } else {
       GroupInfo &group_info = grp_mgr.at(grp);
-      rc = group_info.delete_member(mbr);
-      if (rc == MatchErrorCode::SUCCESS) {
-        index_ref_count.decrease(IndirectIndex::make_mbr_index(mbr));
+      if (group_info.size() == 1) {
+        rc = MatchErrorCode::EMPTY_GRP;
+      } else {
+        rc = group_info.delete_member(mbr);
+        if (rc == MatchErrorCode::SUCCESS) {
+          index_ref_count.decrease(IndirectIndex::make_mbr_index(mbr));
 
-        // TODO(antonin): is it an overkill to hold the lock here?
-        grp_selector->remove_member_from_group(grp, mbr);
+          // TODO(antonin): is it an overkill to hold the lock here?
+          grp_selector->remove_member_from_group(grp, mbr);
+        }
       }
     }
   }
